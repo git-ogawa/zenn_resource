@@ -1,0 +1,15 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-k8s-example
+spec:
+  template:
+    spec:
+      containers:
+        - name: flask-k8s-example
+          env:
+            - name: REGION
+              value: prod
+            - name: CLUSTER
+              value: "k8s-prod"

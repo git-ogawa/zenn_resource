@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-k8s-example
+spec:
+  selector:
+    matchLabels:
+      app: flask-k8s-example
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: flask-k8s-example
+    spec:
+      containers:
+        - name: flask-k8s-example
+          image: harbor.centre.com/k8s/flask-k8s-example:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000

@@ -1,0 +1,72 @@
+resources:
+  - name: input-git
+    type: git
+    check_every: never
+    webhook_token: testtoken
+    public: true
+    icon: git
+    source:
+      uri: https://gitlab.centre.com/gitlab/flask-k8s-example.git
+      branch: main
+      username: xxx
+      password: xxx
+      skip_ssl_verification: true
+  - name: flask-k8s-example
+    type: registry-image
+    icon: docker
+    source:
+      repository: harbor.centre.com/k8s/flask-k8s-example
+      tag: latest
+      username: xxx
+      password: xxx
+      ca_certs:
+        - |
+          xxxxxxxxxxxxxxxxxxxxxxxxx
+          ...
+jobs:
+  - name: build-and-push
+    plan:
+      - get: input-git
+        trigger: true
+      - task: build
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: concourse/oci-build-task
+          inputs:
+            - name: input-git
+          outputs:
+            - name: image
+          params:
+            CONTEXT: input-git
+          run:
+            path: build
+      - put: flask-k8s-example
+        params:
+          image: image/image.tar
+      - task: deploy
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: harbor.centre.com/k8s/argocd-cli
+              tag: latest
+              username: xxx
+              password: xxx
+              ca_certs:
+                - |
+                  xxxxxxxxxxxxxxxxxxxxxxxxx
+                  ...
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                argocd login argocd-dev.com --username admin --password xxx --insecure
+                argocd app sync flask-dev --force --replace
+                argocd app sync flask-prod --force --replace
