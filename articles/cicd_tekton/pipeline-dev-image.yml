@@ -1,0 +1,82 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: build-dev-image
+  namespace: flask-app
+spec:
+  description: >-
+    This pipeline run the sequence of tasks as a pipeline.
+    1. Clone the application source from a git repository.
+    2. Build an image from Dockerfile and push it to a registry.
+    3. Deploy application by argocd sync.
+  params:
+    - name: repositoryUrl
+      type: string
+      description: The git repository URL to clone the source.
+    - name: branch
+      type: string
+      description: The branch of the repository.
+    - name: context
+      description: The path to the build context, used by Kaniko - within the workspace
+      default: "./"
+    - name: imageName
+      description: Image name
+    - name: imageTag
+      description: Image tag
+      default: "latest"
+    - name: argocdApplicationName
+      description: The name of Argocd application to be synced.
+  workspaces:
+    - name: shared-data
+      description: >-
+        This workspace contains the cloned repo files, so they can be read by the
+        next task.
+    - name: git-credentials
+      description: Name of the secret to log in to gitlab.
+    - name: harbor-credentials
+      description: Name of the secret to log in to harbor.
+    - name: argocd-credentials
+      description: Name of the secret to log in to argocd.
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-data
+        - name: basic-auth
+          workspace: git-credentials
+      params:
+        - name: url
+          value: $(params.repositoryUrl)
+        - name: revision
+          value: $(params.branch)
+        - name: sslVerify
+          value: "false"
+    - name: build
+      taskRef:
+        name: kaniko
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: shared-data
+        - name: dockerconfig
+          workspace: harbor-credentials
+      params:
+        - name: IMAGE
+          value: $(params.imageName):$(params.imageTag)
+        - name: CONTEXT
+          value: $(params.context)
+    - name: deploy
+      taskRef:
+        name: argocd-sync
+      runAfter:
+        - git-clone
+        - build
+      workspaces:
+        - name: argocd-basic-auth
+          workspace: argocd-credentials
+      params:
+        - name: applicationName
+          value: $(params.argocdApplicationName)

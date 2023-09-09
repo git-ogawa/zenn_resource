@@ -1,0 +1,30 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: merge-manifest
+  namespace: flask-app
+spec:
+  serviceAccountName: webhook
+  triggers:
+    - name: deploy-prod-manifest
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: body.event_type == 'merge_request'
+            - name: "filter"
+              value: body.project.path_with_namespace == 'gitlab/flask-k8s-manifest'
+            - name: "filter"
+              value: body.object_attributes.target_branch == 'main'
+            - name: "filter"
+              value: body.object_attributes.action == 'merge'
+            - name: "overlays"
+              value:
+                - key: argocdApplicationName
+                  expression: "string('flask-prod')"
+      bindings:
+        - ref: deploy-prod-manifest
+      template:
+        ref: deploy-prod-manifest

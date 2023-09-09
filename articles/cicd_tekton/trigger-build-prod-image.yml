@@ -1,0 +1,71 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: build-prod-image
+  namespace: flask-app
+spec:
+  params:
+    - name: repositoryUrl
+      value: $(body.project.http_url)
+    - name: branch
+      value: $(extensions.branchName)
+    - name: imageName
+      value: $(extensions.imageName)
+    - name: imageTag
+      value: $(extensions.imageTag)
+
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: build-prod-image
+  namespace: flask-app
+spec:
+  params:
+    - name: repositoryUrl
+      description: The git repo URL to clone from.
+    - name: branch
+      description: git branch to be pulled from.
+    - name: imageName
+      description: Image name including repository
+    - name: imageTag
+      description: Image tag
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: build-prod-image-
+      spec:
+        pipelineRef:
+          name: build-prod-image
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+          imagePullSecrets:
+            - name: harbor-basic-auth
+        workspaces:
+          - name: shared-data
+            volumeClaimTemplate:
+              spec:
+                storageClassName: openebs-hostpath
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          - name: git-credentials
+            secret:
+              secretName: gitlab-basic-auth
+          - name: harbor-credentials
+            secret:
+              secretName: harbor-basic-auth
+        params:
+          - name: repositoryUrl
+            value: $(tt.params.repositoryUrl)
+          - name: branch
+            value: $(tt.params.branch)
+          - name: imageName
+            value: $(tt.params.imageName)
+          - name: imageTag
+            value: $(tt.params.imageTag)

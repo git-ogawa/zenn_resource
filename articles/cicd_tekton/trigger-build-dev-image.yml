@@ -1,0 +1,80 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: build-dev-image
+  namespace: flask-app
+spec:
+  params:
+    - name: repositoryUrl
+      value: $(body.project.http_url)
+    - name: branch
+      value: $(extensions.branchName)
+    - name: imageName
+      value: $(extensions.imageName)
+    - name: imageTag
+      value: $(extensions.imageTag)
+    - name: argocdApplicationName
+      value: $(extensions.argocdApplicationName)
+
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: build-dev-image
+  namespace: flask-app
+spec:
+  params:
+    - name: repositoryUrl
+      description: The git repository URL to clone the source.
+    - name: branch
+      description: The branch of the repository.
+    - name: imageName
+      description: Image name
+    - name: imageTag
+      description: Image tag
+    - name: argocdApplicationName
+      description: The name of Argocd application to be synced
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: build-dev-image-
+      spec:
+        pipelineRef:
+          name: build-dev-image
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+          imagePullSecrets:
+            - name: harbor-basic-auth
+        workspaces:
+          - name: shared-data
+            volumeClaimTemplate:
+              spec:
+                storageClassName: openebs-hostpath
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          - name: git-credentials
+            secret:
+              secretName: gitlab-basic-auth
+          - name: harbor-credentials
+            secret:
+              secretName: harbor-basic-auth
+          - name: argocd-credentials
+            secret:
+              secretName: argocd-basic-auth
+        params:
+          - name: repositoryUrl
+            value: $(tt.params.repositoryUrl)
+          - name: branch
+            value: $(tt.params.branch)
+          - name: imageName
+            value: $(tt.params.imageName)
+          - name: imageTag
+            value: $(tt.params.imageTag)
+          - name: argocdApplicationName
+            value: $(tt.params.argocdApplicationName)

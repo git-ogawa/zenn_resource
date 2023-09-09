@@ -1,0 +1,33 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: el-flask-app
+  namespace: flask-app
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tekton-webhook.ops.com
+      http:
+        paths:
+          - path: /dev
+            pathType: Prefix
+            backend:
+              service:
+                name: el-flask-app-dev
+                port:
+                  number: 8080
+          - path: /prod
+            pathType: Prefix
+            backend:
+              service:
+                name: el-flask-app-prod
+                port:
+                  number: 8080
+          - path: /manifest
+            pathType: Prefix
+            backend:
+              service:
+                name: el-merge-manifest
+                port:
+                  number: 8080

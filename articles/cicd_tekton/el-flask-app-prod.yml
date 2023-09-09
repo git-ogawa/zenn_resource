@@ -1,0 +1,30 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: flask-app-prod
+  namespace: flask-app
+spec:
+  serviceAccountName: webhook
+  triggers:
+    - name: event-tag-push
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: body.event_name == "tag_push"
+            - name: "filter"
+              value: body.project.path_with_namespace == 'gitlab/flask-k8s-example'
+            - name: "overlays"
+              value:
+                - key: branchName
+                  expression: "string('main')"
+                - key: imageName
+                  expression: "string('harbor.centre.com/k8s/flask-k8s-example')"
+                - key: imageTag
+                  expression: "body.ref.split('/')[2].replace('v', '')"
+      bindings:
+        - ref: build-prod-image
+      template:
+        ref: build-prod-image

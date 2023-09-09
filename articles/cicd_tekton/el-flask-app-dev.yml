@@ -1,0 +1,34 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: flask-app-dev
+  namespace: flask-app
+spec:
+  serviceAccountName: webhook
+  triggers:
+    - name: event-dev-branch
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: body.ref != 'refs/heads/main'
+            - name: "filter"
+              value: body.project.path_with_namespace == 'gitlab/flask-k8s-example'
+            - name: "filter"
+              value: body.event_name == 'push'
+            - name: "overlays"
+              value:
+                - key: branchName
+                  expression: "string('dev')"
+                - key: imageName
+                  expression: "string('harbor.centre.com/k8s/flask-k8s-example-dev')"
+                - key: imageTag
+                  expression: "string('latest')"
+                - key: argocdApplicationName
+                  expression: "string('flask-dev')"
+      bindings:
+        - ref: build-dev-image
+      template:
+        ref: build-dev-image

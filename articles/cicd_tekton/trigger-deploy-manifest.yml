@@ -1,0 +1,36 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: deploy-prod-manifest
+  namespace: flask-app
+spec:
+  params:
+    - name: argocdApplicationName
+      value: $(extensions.argocdApplicationName)
+
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: deploy-prod-manifest
+  namespace: flask-app
+spec:
+  params:
+    - name: argocdApplicationName
+      description: Argocd application name to be deployed
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: TaskRun
+      metadata:
+        generateName: deploy-prod-manifest-
+      spec:
+        taskRef:
+          name: argocd-sync
+        workspaces:
+          - name: argocd-basic-auth
+            secret:
+              secretName: argocd-basic-auth
+        params:
+          - name: applicationName
+            value: $(tt.params.argocdApplicationName)
