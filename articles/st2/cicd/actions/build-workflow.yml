@@ -1,0 +1,41 @@
+---
+name: build-workflow
+description: Clone git repository, build an image and push it to a remote registry.
+runner_type: orquesta
+entry_point: workflows/build-workflow.yml
+enabled: true
+parameters:
+  repository_url:
+    type: string
+    description: "Git repository url such as https://..../repo.git"
+    required: true
+  branch:
+    type: string
+    description: "Gir branch"
+    default: main
+  username:
+    type: string
+    description: "Git username"
+  password:
+    type: string
+    description: "Git password"
+  image_name:
+    type: string
+    description: "Image name"
+    required: true
+  image_tag:
+    type: string
+    description: "Image tag"
+    default: latest
+  dockerfile_name:
+    type: string
+    description: "Dockerfile filename"
+    default: Dockerfile
+  registry_host:
+    type: string
+    description: "Registry host where the image to be pushed. [host]:[port]"
+    required: true
+  tls_verify:
+    type: string
+    description: "TLS Check"
+    default: "true"

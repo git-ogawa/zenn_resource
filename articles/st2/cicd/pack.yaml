@@ -1,0 +1,10 @@
+---
+name: cicd
+description: my CICD custom pack
+keywords:
+  - cicd
+version: 1.0.0
+python_versions:
+  - "3"
+author: aaa
+email: info@local.com

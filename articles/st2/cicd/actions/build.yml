@@ -1,0 +1,36 @@
+description: 'Build and push an image action'
+enabled: true
+entry_point: build.sh
+name: build
+parameters:
+  image_name:
+    type: string
+    description: "Image name"
+    required: true
+    position: 0
+  image_tag:
+    type: string
+    description: "Image tag"
+    default: latest
+    position: 1
+  directory:
+    type: string
+    description: "Path to the directory where Dockerfile exists"
+    required: true
+    position: 2
+  dockerfile_name:
+    type: string
+    description: "Dockerfile filename"
+    default: Dockerfile
+    position: 3
+  registry_host:
+    type: string
+    description: "Registry host [host]:[port]"
+    required: true
+    position: 4
+  tls_verify:
+    type: string
+    description: "Check if TLS verify"
+    default: "true"
+    position: 5
+runner_type: "local-shell-script"

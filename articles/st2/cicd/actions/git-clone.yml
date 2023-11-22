@@ -1,0 +1,29 @@
+description: 'Git clone action'
+enabled: true
+entry_point: git-clone.sh
+name: git-clone
+parameters:
+  repository_url:
+    type: string
+    description: "Repository url"
+    required: true
+    position: 0
+  branch:
+    type: string
+    description: "Branch"
+    default: main
+    position: 1
+  username:
+    type: string
+    description: "Username"
+    position: 2
+  password:
+    type: string
+    description: "Password"
+    position: 3
+  tls_verify:
+    type: string
+    description: "Check if TLS verify"
+    default: "true"
+    position: 4
+runner_type: "local-shell-script"

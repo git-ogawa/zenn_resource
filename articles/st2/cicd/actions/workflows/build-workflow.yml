@@ -1,0 +1,72 @@
+version: 1.0
+description: Build image and push.
+input:
+  - repository_url
+  - branch
+  - username
+  - password
+  - image_name
+  - image_tag
+  - directory
+  - dockerfile_name
+  - registry_host
+  - tls_verify
+vars:
+  - build_status: null
+  - result_message: null
+output:
+  - result: null
+tasks:
+  git_clone:
+    action: cicd.git-clone
+    input:
+      repository_url: "{{ ctx().repository_url }}"
+      branch: "{{ ctx().branch }}"
+      username: "{{ ctx().username }}"
+      password: "{{ ctx().password }}"
+      tls_verify: "{{ ctx().tls_verify }}"
+    next:
+      - when: "{{ succeeded() }}"
+        publish:
+          - directory: "/opt/stackstorm/virtualenvs/tmp/{{ ctx().repository_url.split('/') | last | replace('.git', '') }}"
+        do: build_push
+      - when: "{{ failed() }}"
+        publish:
+          - build_status: Fail
+          - result_message: "{{ result().stderr }}"
+        do: post_result
+  build_push:
+    action: cicd.build
+    input:
+      image_name: "{{ ctx().image_name }}"
+      image_tag: "{{ ctx().image_tag }}"
+      directory: "{{ ctx().directory }}"
+      dockerfile_name: "{{ ctx().dockerfile_name }}"
+      registry_host: "{{ ctx().registry_host }}"
+      tls_verify: "{{ ctx().tls_verify }}"
+    next:
+      - when: "{{ succeeded() }}"
+        publish:
+          - build_status: Success
+        do: post_result
+      - when: "{{ failed() }}"
+        publish:
+          - build_status: Fail
+          - result_message: "{{ result().stderr }}"
+        do: post_result
+  post_result:
+    action: slack.post_message
+    input:
+      message: |
+        Build_statue: {{ ctx().build_status }}
+        Repository: {{ ctx().repository_url }}
+        Image: {{ ctx().registry_host }}/{{ ctx().image_name }}:{{ ctx().image_tag }}
+        {% if ctx().result_message is not none %}
+        message:
+        ```
+        {{ ctx().result_message }}
+        ```
+        {% endif %}
+      channel: "#general"
+      username: bot_test
+      webhook_url: "https://hooks.slack.com/xxxxxxxxxxxxxxxxxxxx"
