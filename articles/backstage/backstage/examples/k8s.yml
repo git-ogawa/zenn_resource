@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: k8s-example
+  annotations:
+    backstage.io/kubernetes-id: my-kubernetes-component
+    backstage.io/kubernetes-label-selector: 'backstage-app="true"'
+    argocd/app-name: backstage-sample-app
+    goharbor.io/repository-slug: k8s/flask-k8s-example
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests
+  system: examples

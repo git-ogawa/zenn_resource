@@ -1,0 +1,11 @@
+site_name: Backstage-frontend
+site_description: An informative description
+plugins:
+  - techdocs-core
+
+nav:
+  - Getting Started: index.md
+
+theme:
+  name: material
+

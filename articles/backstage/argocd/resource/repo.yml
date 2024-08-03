@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-tls-certs-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  gitlab.ops.com: |
+    -----BEGIN CERTIFICATE-----
+    ...
+    -----END CERTIFICATE-----
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: git
+  url: https://gitlab.ops.com/kube/backstage-example.git
+  password: <password>
+  username: <username>

@@ -1,0 +1,15 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage-example-frontend
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.ops.com/kube/backstage-example.git
+    targetRevision: HEAD
+    path: argocd/deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backstage-sample

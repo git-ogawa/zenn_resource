@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: k8s-example
+  annotations:
+    backstage.io/kubernetes-label-selector: 'backstage-project=k8s-example'
+    argocd/app-name: backstage-sample-app
+    janus-idp.io/tekton: k8s-example
+    # backstage.io/kubernetes-id: k8s-example
+    goharbor.io/repository-slug: k8s/backstage-front
+    backstage.io/techdocs-ref: dir:../
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests
+  system: examples

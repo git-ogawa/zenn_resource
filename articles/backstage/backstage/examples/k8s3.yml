@@ -1,0 +1,204 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: mydomain
+  description: Everything about mydomain
+spec:
+  owner: guest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: backstage-example
+  description: Backstage example system
+spec:
+  owner: guest
+  domain: mydomain
+  dependsOn:
+    - component:backstage-example-frontend
+    - component:backstage-example-backend
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage-example-frontend
+  annotations:
+    backstage.io/kubernetes-label-selector: 'backstage-project=backstage-example-frontend'
+    argocd/app-name: backstage-example-frontend
+    janus-idp.io/tekton: backstage-example-frontend
+    goharbor.io/repository-slug: k8s/backstage-frontend
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests
+  system: backstage-example
+  providesApis:
+    - backstage-example-frontend-api
+  dependsOn:
+    - backstage-example-backend
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage-example-backend
+  annotations:
+    backstage.io/kubernetes-label-selector: 'backstage-project=backstage-example-backend'
+    argocd/app-name: backstage-example-backend
+    janus-idp.io/tekton: backstage-example-backend
+    goharbor.io/repository-slug: k8s/backstage-backend
+  links:
+    - title: Github
+      url: https://github.com
+    - title: Harbor
+      url: https://harbor.centre.cim
+    - title: Argocd
+      url: https://harbor.centre.cim
+    - title: Tekton
+      url: https://tekton.com
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests
+  system: backstage-example
+  dependsOn:
+    - backstage-example-frontend
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: k8s-backstage-cluster
+  description: kubernete cluster for backstage example
+spec:
+  type: cluster
+  owner: guests
+  system: backstage-example
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: backstage-example-frontend-api
+  description: API
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: guests
+  system: backstage-example
+  # definition:
+    # $yaml: https://gitea.centre.com:3000/kube/backstage-example/src/branch/main/application/docs/openapi.yml
+  # definition: |
+  #   openapi: 3.0.0
+  #   info:
+  #     title: backstage-frontend
+  #     description: Frontend application for backstage example
+  #     version: 1.0.0
+  #   servers:
+  #     - url: https://api.example.com/v1
+  #       description: Main production server
+  #   paths:
+  #     /users:
+  #       get:
+  #         summary: List all users
+  #         operationId: listUsers
+  #         tags:
+  #           - Users
+  #         responses:
+  #           '200':
+  #             description: A list of users
+  #             content:
+  #               application/json:
+  #                 schema:
+  #                   type: array
+  #                   items:
+  #                     type: object
+  #                     properties:
+  #                       id:
+  #                         type: integer
+  #                         example: 1
+  #                       name:
+  #                         type: string
+  #                         example: John Doe
+  #       post:
+  #         summary: Create a new user
+  #         operationId: createUser
+  #         tags:
+  #           - Users
+  #         requestBody:
+  #           description: User object that needs to be added
+  #           required: true
+  #           content:
+  #             application/json:
+  #               schema:
+  #                 type: object
+  #                 properties:
+  #                   name:
+  #                     type: string
+  #                     example: Jane Doe
+  #         responses:
+  #           '201':
+  #             description: User created successfully
+  #             content:
+  #               application/json:
+  #                 schema:
+  #                   type: object
+  #                   properties:
+  #                     id:
+  #                       type: integer
+  #                       example: 2
+  #                     name:
+  #                       type: string
+  #                       example: Jane Doe
+  #     /users/{userId}:
+  #       get:
+  #         summary: Get a user by ID
+  #         operationId: getUser
+  #         tags:
+  #           - Users
+  #         parameters:
+  #           - name: userId
+  #             in: path
+  #             required: true
+  #             schema:
+  #               type: integer
+  #         responses:
+  #           '200':
+  #             description: A user object
+  #             content:
+  #               application/json:
+  #                 schema:
+  #                   type: object
+  #                   properties:
+  #                     id:
+  #                       type: integer
+  #                       example: 1
+  #                     name:
+  #                       type: string
+  #                       example: John Doe
+  #           '404':
+  #             description: User not found
+  #     /version:
+  #       get:
+  #         summary: Get API version
+  #         operationId: getVersion
+  #         tags:
+  #           - Version
+  #         responses:
+  #           '200':
+  #             description: API version information
+  #             content:
+  #               application/json:
+  #                 schema:
+  #                   type: object
+  #                   properties:
+  #                     version:
+  #                       type: string
+  #                       example: 1.0.0
+  #                     releaseDate:
+  #                       type: string
+  #                       format: date
+  #                       example: 2023-01-01

@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1 # or tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: backstage-cicd-run
+spec:
+  pipelineRef:
+    name: backstage-ci-cd
+  taskRunTemplate:
+    podTemplate:
+      securityContext:
+        fsGroup: 65532
+      imagePullSecrets:
+        - name: harbor-basic-auth
+  workspaces:
+    - name: shared-data
+      volumeClaimTemplate:
+        spec:
+          storageClassName: openebs-hostpath
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: git-credentials
+      secret:
+        secretName: gitlab-basic-auth
+    - name: harbor-credentials
+      secret:
+        secretName: harbor-basic-auth
+    - name: argocd-credentials
+      secret:
+        secretName: argocd-basic-auth
+  params:
+    - name: repositoryUrl
+      value: https://gitlab.ops.com/kube/backstage-example.git
+    - name: branch
+      value: main
+    - name: imageName
+      value: harbor.centre.com/k8s/backstage-frontend
+    - name: imageTag
+      value: latest
+    - name: argocdApplicationName
+      value: backstage-example-frontend
