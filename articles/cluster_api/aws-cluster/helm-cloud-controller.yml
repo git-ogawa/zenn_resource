@@ -1,0 +1,113 @@
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: cloud-controller-manager
+  namespace: capa-system
+spec:
+  clusterSelector:
+    matchLabels: {}
+  releaseName: aws-cloud-controller-manager
+  repoURL: https://kubernetes.github.io/cloud-provider-aws
+  chartName: aws-cloud-controller-manager
+  namespace: kube-system
+  valuesTemplate: |
+    args:
+      - --v=2
+      - --cloud-provider=aws
+      - --use-service-account-credentials=true
+      - --configure-cloud-routes=false
+    clusterRoleRules:
+    - apiGroups:
+      - ""
+      resources:
+      - events
+      verbs:
+      - create
+      - patch
+      - update
+    - apiGroups:
+      - ""
+      resources:
+      - nodes
+      verbs:
+      - '*'
+    - apiGroups:
+      - ""
+      resources:
+      - nodes/status
+      verbs:
+      - patch
+    - apiGroups:
+      - ""
+      resources:
+      - services
+      verbs:
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - services/status
+      verbs:
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - serviceaccounts
+      verbs:
+      - create
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - persistentvolumes
+      verbs:
+      - get
+      - list
+      - update
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - endpoints
+      verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+    - apiGroups:
+      - coordination.k8s.io
+      resources:
+      - leases
+      verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+    - apiGroups:
+      - ""
+      resources:
+      - serviceaccounts/token
+      verbs:
+      - create
+    - apiGroups:
+        - authentication.k8s.io
+      resources:
+        - tokenreviews
+      verbs:
+        - create
+    - apiGroups:
+        - authorization.k8s.io
+      resources:
+        - subjectaccessreviews
+      verbs:
+        - create

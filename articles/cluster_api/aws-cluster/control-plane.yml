@@ -1,0 +1,80 @@
+kind: AWSCluster
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+metadata:
+  name: my-cluster-aws
+  namespace: capa-system
+spec:
+  region: ap-northeast-1
+  sshKeyName: key_name
+  controlPlaneLoadBalancer:
+    loadBalancerType: nlb
+  network:
+    vpc:
+      availabilityZoneSelection: Ordered
+      availabilityZoneUsageLimit: 2
+
+---
+kind: Cluster
+apiVersion: cluster.x-k8s.io/v1beta1
+metadata:
+  name: my-cluster
+  namespace: capa-system
+spec:
+  infrastructureRef:
+    kind: AWSCluster
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+    name: my-cluster-aws
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: aws-control-plane
+
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: aws-control-plane
+  namespace: capa-system
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+      controllerManager:
+        extraArgs:
+          cloud-provider: external
+      networking:
+        podSubnet: "10.244.0.0/16"
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: "{{ ds.meta_data.local_hostname }}"
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: "{{ ds.meta_data.local_hostname }}"
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+      kind: AWSMachineTemplate
+      name: aws-control-plane
+  replicas: 1
+  version: v1.30.5
+
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: aws-control-plane
+  namespace: capa-system
+spec:
+  template:
+    spec:
+      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t2.medium
+      sshKeyName: key_name
+      ami:
+        id: "ami-09a92f3026810e9f2"

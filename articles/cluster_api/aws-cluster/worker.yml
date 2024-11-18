@@ -1,0 +1,53 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: md
+  namespace: capa-system
+spec:
+  clusterName: my-cluster
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: aws-ct
+      clusterName: capi-quickstart
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+        kind: AWSMachineTemplate
+        name: aws-mt-worker
+      version: v1.30.5
+
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: aws-mt-worker
+  namespace: capa-system
+spec:
+  template:
+    spec:
+      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t2.medium
+      sshKeyName: key_name
+      ami:
+        id: "ami-09a92f3026810e9f2"
+
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: aws-ct
+  namespace: capa-system
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: external
+          name: "{{ ds.meta_data.local_hostname }}"
