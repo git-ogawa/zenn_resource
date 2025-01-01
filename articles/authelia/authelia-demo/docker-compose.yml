@@ -1,0 +1,13 @@
+services:
+  frontend:
+    container_name: demo-frontend
+    build: frontend
+    environment:
+      NEXT_PUBLIC_BACKEND_API_URL: http://backend:8000
+    ports:
+      - 3000:3000
+  backend:
+    container_name: demo-backend
+    build: backend
+    ports:
+      - 8000:8000

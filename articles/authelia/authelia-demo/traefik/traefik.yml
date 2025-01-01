@@ -1,0 +1,16 @@
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    http:
+      tls: {}
+api:
+  debug: true
+  insecure: true
+  dashboard: true
+providers:
+  file:
+    directory: "/opt/dynamic"
+log:
+  level: DEBUG

@@ -1,0 +1,14 @@
+users:
+  authelia:
+    disabled: false
+    displayname: "authelia"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$bsLnKlPffIRQ7k/qrtcFiA$JJ2ZhZ/vGNqGA3BQ8cgPvuaSAd1+xwTBy7hQHUKvadY"
+    email: admin@example.com
+    groups:
+      - admins
+  testuser:
+    displayname: "testuser"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$nA46jBWRAbbrIR2ajUrAAg$ZBG8BslLdfsUMv73LEgEmhtRhcgBtr9RYEasRPzqGeo"
+    email: testuser@example.com
+    groups:
+      - dev

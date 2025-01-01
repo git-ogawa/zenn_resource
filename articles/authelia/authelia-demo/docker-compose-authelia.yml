@@ -1,0 +1,28 @@
+services:
+  traefik:
+    image: traefik
+    container_name: demo-traefik
+    ports:
+      - "8080:80"
+      - "4443:443"
+      - "3000:443"
+      - "8000:443"
+      - "9091:443"
+    volumes:
+      - type: bind
+        source: ./traefik/traefik.yml
+        target: /etc/traefik/traefik.yml
+      - type: bind
+        source: ./traefik/dynamic
+        target: /opt/dynamic
+  authelia:
+    container_name: demo-authelia
+    image: authelia/authelia:latest
+    volumes:
+      - ./authelia:/config
+  frontend:
+    container_name: demo-frontend
+    build: frontend
+  backend:
+    container_name: demo-backend
+    build: backend
