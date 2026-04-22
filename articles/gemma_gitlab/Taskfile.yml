@@ -1,0 +1,47 @@
+version: "3"
+
+tasks:
+  model-pull:
+    desc: model pull
+    cmds:
+      - docker exec ollama ollama pull gemma4:e4b
+      - docker exec ollama ollama create gemma4-gpu -f /ollama-config/Modelfile.gemma4-gpu
+  up:
+    desc: 全サービス起動
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: 全サービス停止
+    cmds:
+      - task: sync-down
+      - docker compose down
+
+  sync-up:
+    desc: gitlab-sync 起動
+    cmd: docker compose -f gitlab-sync/docker-compose.yml up -d --build
+
+  sync-down:
+    desc: gitlab-sync 停止
+    cmd: docker compose -f gitlab-sync/docker-compose.yml down
+
+  restart:
+    desc: 全サービス再起動
+    cmds:
+      - task: down
+      - task: up
+
+  sync:
+    desc: 手動同期（全件強制）
+    cmd: docker exec gitlab-sync sync run --force
+
+  sync:project:
+    desc: 特定プロジェクトを同期（PROJECT=namespace/path）
+    cmd: docker exec gitlab-sync sync run --force --project {{.PROJECT}}
+    requires:
+      vars: [PROJECT]
+
+  sync:dry-run:
+    desc: 同期対象の一覧表示
+    cmd: docker exec gitlab-sync sync run --dry-run
+

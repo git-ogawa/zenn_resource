@@ -1,0 +1,90 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./ollama:/ollama-config
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_CONTEXT_LENGTH=16384
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:cuda
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    volumes:
+      - open_webui_data:/app/backend/data
+    environment:
+      # Ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_MODELS=gemma4-gpu
+      # Auth
+      - WEBUI_ADMIN_EMAIL=admin@example.com
+      - WEBUI_ADMIN_PASSWORD=admin12345
+      # RAG
+      - RAG_EMBEDDING_MODEL=cl-nagoya/ruri-v3-130m
+      - RAG_EMBEDDING_BATCH_SIZE=3
+      - CHUNK_SIZE=1500
+      - CHUNK_OVERLAP=200
+      - RAG_TOP_K=10
+      - RAG_RELEVANCE_THRESHOLD=0.1
+      - ENABLE_RAG_HYBRID_SEARCH=true
+      - RAG_RERANKING_MODEL=cl-nagoya/ruri-v3-reranker-310m
+      - RAG_TOP_K_RERANKER=10
+      # API Key (gitlab-sync)
+      - ENABLE_API_KEYS=true
+      - USER_PERMISSIONS_FEATURES_API_KEYS=true
+      # Audit
+      - AUDIT_LOG_LEVEL=REQUEST_RESPONSE
+      - AUDIT_INCLUDED_PATHS=chat/completions
+      - MAX_BODY_LOG_SIZE=1048576
+      - ENABLE_AUDIT_STDOUT=true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    depends_on:
+      - ollama
+
+  gitlab-mcp:
+    image: zereight050/gitlab-mcp
+    container_name: gitlab-mcp
+    restart: unless-stopped
+    extra_hosts:
+      - "gitlab.ops.com:192.168.3.183"
+    environment:
+      - HOST=0.0.0.0
+      - STREAMABLE_HTTP=true
+      - GITLAB_PERSONAL_ACCESS_TOKEN=xxx
+      - GITLAB_API_URL=https://gitlab.ops.com/api/v4
+      - GITLAB_READ_ONLY_MODE=true
+      - USE_GITLAB_WIKI=false
+      - USE_MILESTONE=false
+      - USE_PIPELINE=true
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    ports:
+      - "3333:3002"
+    depends_on:
+      - open-webui
+
+volumes:
+  ollama_data:
+  open_webui_data:

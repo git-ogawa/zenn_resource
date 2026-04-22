@@ -1,0 +1,18 @@
+services:
+  gitlab-sync:
+    build: .
+    container_name: gitlab-sync
+    restart: unless-stopped
+    extra_hosts:
+      - "gitlab.ops.com:192.168.3.183"
+      - "host.docker.internal:host-gateway"
+    environment:
+      - GITLAB_URL=https://gitlab.ops.com
+      - GITLAB_TOKEN=xxxx
+      - OPEN_WEBUI_URL=http://host.docker.internal:3000
+      - OPEN_WEBUI_API_KEY=sk-1dfc9c5183004b19822fc0039fa061f3
+    volumes:
+      - gitlab_sync_state:/app/state
+
+volumes:
+  gitlab_sync_state:
