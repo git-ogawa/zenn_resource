@@ -1,0 +1,20 @@
+groups:
+  - developer
+  - reader
+users:
+  - uid: dev-user
+    email: dev-user@test.com
+    password: dev-user
+    display_name: dev-user
+    first_name: user
+    last_name: one
+    groups:
+      - developer
+  - uid: reader-user
+    email: reader@test.com
+    password: reader
+    display_name: reader
+    first_name: user
+    last_name: two
+    groups:
+      - reader

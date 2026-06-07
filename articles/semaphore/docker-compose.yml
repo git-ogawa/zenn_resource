@@ -1,0 +1,40 @@
+services:
+  postgres:
+    container_name: semaphore-postgres
+    restart: unless-stopped
+    image: postgres:latest
+    hostname: postgres
+    volumes:
+      - semaphore-postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: semaphore
+      POSTGRES_PASSWORD: semaphore
+      POSTGRES_DB: semaphore
+
+  semaphore:
+    container_name: semaphore
+    restart: unless-stopped
+    build: ./semaphore
+    ports:
+      - 3000:3000
+    environment:
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: semaphore
+      SEMAPHORE_DB_HOST: postgres
+      SEMAPHORE_DB_PORT: 5432
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN_PASSWORD: semaphore
+      SEMAPHORE_ADMIN_NAME: semaphore
+      SEMAPHORE_ADMIN_EMAIL: semaphore@localhost
+      SEMAPHORE_ADMIN: semaphore
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+      SEMAPHORE_WEB_ROOT: http://localhost:3000
+      TZ: Asia/Tokyo
+    depends_on:
+      - postgres
+
+volumes:
+  semaphore-postgres:
+    name: semaphore-postgres

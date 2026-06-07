@@ -1,0 +1,21 @@
+version: '3'
+tasks:
+  up:
+    cmds:
+      - docker compose up -d
+  down:
+    cmds:
+      - docker compose down
+      - docker volume rm semaphore-postgres
+  runner:up:
+    cmds:
+      - docker compose -f docker-compose-runner.yml up -d
+  runner:down:
+      - docker compose -f docker-compose-runner.yml down
+      - docker volume rm semaphore-postgres semaphore-runner
+  authelia:up:
+    cmds:
+      - docker compose -f docker-compose-authelia.yml up -d
+  authelia:down:
+      - docker compose -f docker-compose-authelia.yml down
+      - docker volume rm semaphore-postgres

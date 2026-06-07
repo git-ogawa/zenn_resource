@@ -1,0 +1,63 @@
+services:
+  postgres:
+    container_name: semaphore-postgres
+    restart: unless-stopped
+    image: postgres:latest
+    hostname: postgres
+    volumes:
+      - semaphore-postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: semaphore
+      POSTGRES_PASSWORD: semaphore
+      POSTGRES_DB: semaphore
+
+  semaphore:
+    container_name: semaphore
+    restart: unless-stopped
+    build: ./semaphore
+    ports:
+      - 3000:3000
+    environment:
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: semaphore
+      SEMAPHORE_DB_HOST: postgres
+      SEMAPHORE_DB_PORT: 5432
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN_PASSWORD: semaphore
+      SEMAPHORE_ADMIN_NAME: semaphore
+      SEMAPHORE_ADMIN_EMAIL: semaphore@localhost
+      SEMAPHORE_ADMIN: semaphore
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+      SEMAPHORE_WEB_ROOT: http://localhost:3000
+      # Runner settings
+      SEMAPHORE_USE_REMOTE_RUNNER: 'true'
+      SEMAPHORE_RUNNER_REGISTRATION_TOKEN: "3/sDO5a+/kZmwTe519VD7ccEgfQgoZ7I2UuhPU5aQuU="
+      TZ: Asia/Tokyo
+    depends_on:
+      - postgres
+
+  semaphore-runner:
+    container_name: semaphore-runner
+    restart: unless-stopped
+    build: ./semaphore-runner
+    environment:
+      SEMAPHORE_RUNNER_REGISTRATION_TOKEN: 3/sDO5a+/kZmwTe519VD7ccEgfQgoZ7I2UuhPU5aQuU=
+      SEMAPHORE_WEB_ROOT: http://semaphore:3000
+      SEMAPHORE_RUNNER_PRIVATE_KEY_FILE: /var/lib/semaphore/runner.key
+      SEMAPHORE_RUNNER_NAME: docker-runner
+      SEMAPHORE_RUNNER_ENABLED: 'true'
+      SEMAPHORE_TMP_PATH: /tmp/semaphore
+      SEMAPHORE_MAX_PARALLEL_TASKS: 10
+      TZ: Asia/Tokyo
+    volumes:
+      - semaphore-runner:/var/lib/semaphore
+    depends_on:
+      - semaphore
+
+volumes:
+  semaphore-postgres:
+    name: semaphore-postgres
+  semaphore-runner:
+    name: semaphore-runner

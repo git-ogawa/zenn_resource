@@ -1,0 +1,116 @@
+theme: "dark"
+server:
+  address: "tcp://:9091"
+  tls:
+    key: /certs/authelia.centre.com.key
+    certificate: /certs/authelia.centre.com.crt
+log:
+  level: "debug"
+identity_validation:
+  reset_password:
+    jwt_secret: "a_very_important_secret"
+
+authentication_backend:
+  refresh_interval: 1m
+  ldap:
+    implementation: custom
+    address: ldap://lldap:3890
+    timeout: 5s
+    start_tls: false
+    base_dn: "dc=ldap,dc=centre,dc=com"
+    users_filter: "(&({username_attribute}={input})(objectClass=person))"
+    additional_users_dn: "ou=people"
+    additional_groups_dn: "ou=groups"
+    attributes:
+      username: "uid"
+      display_name: "displayName"
+      mail: "mail"
+      group_name: "cn"
+      member_of: "memberOf"
+      distinguished_name: "distinguishedName"
+    groups_filter: "(member={dn})"
+    user: "uid=admin,ou=people,dc=ldap,dc=centre,dc=com"
+    password: "password"
+
+access_control:
+  default_policy: "deny"
+  rules:
+    - domain: "authelia.centre.com"
+      policy: "one_factor"
+session:
+  secret: "insecure_session_secret"
+  cookies:
+    - name: "authelia_session"
+      domain: "centre.com"
+      authelia_url: "https://authelia.centre.com:9091"
+      expiration: "1 hour" # 1 hour
+      inactivity: "5 minutes" # 5 minutes
+regulation:
+  max_retries: 3
+  find_time: "2 minutes"
+  ban_time: "5 minutes"
+storage:
+  encryption_key: "you_must_generate_a_random_string_of_more_than_twenty_chars_and_configure_this"
+  local:
+    path: "/config/db.sqlite3"
+notifier:
+  filesystem:
+    filename: "/config/notification.txt"
+identity_providers:
+  oidc:
+    claims_policies:
+      semaphore_claims_policy:
+        id_token:
+          - groups
+          - email
+          - email_verified
+          - alt_emails
+          - preferred_username
+          - name
+    jwks:
+      - key_id: "authelia"
+        algorithm: "RS256"
+        use: "sig"
+        key: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC96uAWjACPLr/E
+          32P5kkdN9XHKxUxSFUsBM7HYJwKtL7Y39kLFMa7vKG7rpybop3H791LR78qoiD68
+          zWsUAtbAT75LwKCrWaHHHJP9SoKI/pNoZwTOoneTfy6PQ8XESK10xAFWMnsIWfMg
+          4mkjzMRqhASYjudcYFeDvUBEabJGmFxFjkfAmDp4cphGLJ7YMG8FpCSknjqo4YGq
+          qa1qD68yjsK+8K1iPi1h2vF8KYZPGX4MEE+abOUGBRfTGVe2m29N8EtlPeArGIHy
+          o9AamPvjSRimMFoNvqQIc9vrEV1hIaNfNKSNuXUeIys+K5xQtAnb/86BEwQkE5Sa
+          OJGCAYn7AgMBAAECggEAPbPsR1cILXzeUEvV8vVcFk+Kv3r3j2mcm1Dc1KHkBDmO
+          pcLsMZ4xPEFyPDzr7sXMSjUyIsQaH0RYwcWppvA/Lm8aIAl/CfzOi17VFAObwn+X
+          i+GAldQCLpkxGtnFjL6iIGA4IPW4tF9pFwOIblmubP7kcV5oe8JPXJ1lnnSKt9Vj
+          GvZYGzRWEFzD8SAM9wzfQQAfZduWHY+Q2kQRRVTGfNWrObBTllgOxZF7Uge5k016
+          tc/Ot0NSJ71h9VghUkiv7IIRCGZdMpeLC9jH8AMayN5DxiQE1ArEdMNYZdcjMGyY
+          t+LMJgyG/6py5W4gFSki8FxYFQ3jRH2T6bqOp1VF6QKBgQD6uWHRn1nj4R2nSrZT
+          oCjCSx9KsnGxvk+sSD/oGLMI5NescuSnfTuAZDsDSymCj9+kLmeQ6OPGmx1aPHiO
+          1LxukhM2xIF9ORZUOLY2UJ0wm1YuaPfy4SoBttHtTx7RN0zeygmAGevaEFd06w9R
+          ouqI+3aNfaWMhAWqBPtNAW1yKQKBgQDB6e+NUlifkw9GvmW0/XfEgvrpnLoCi5qN
+          H0P+eG4df5c8x0a1xWsR9ugl40t2uo3r+yU4BFHTcocBzeKAIEbFX7acyfVBEi9p
+          3eEG+n1qpwUwMjjFJTD5rwkkRYssXQDuxxT1ovehrR6MzfxGNwJXTTJdRMj6ART5
+          mh77p/kHgwKBgQCjFdSn6pQo4zRLrhBc4u/AOecXymyj5hui/7f5+57xKRGUzYMn
+          4xDCGfA82zYcBAO/oqOhIauPczQrjuwIVB5hecjftgBYeLqqe90iBVvJ0zDCrWqi
+          5I1TYhy41N9BzUvGGvsFBVdhl4Gbvo5PVr5h7deWf2UgunuItQbVdxk+yQKBgHst
+          /rU4LQHZKigXRIZvSMh1J6yEmYiKY/fnd4rLt69XYJwEPn+zU6uKu7dtpn9aTFMu
+          K1tlKxF1vBtCTPJ1Dl/MyDTa+ceHJMVMY+jJ8Cdyx5HxJSzezjidnuICp0DcJ36G
+          ymKrTkDOtwxcwTddNEh+ylKDImPlkgxogev8rO2/AoGAQ8H05ow2cz0ulyqsaGC0
+          SWhT+leWXzgXmca0ENPlX32V5rPDONis5O8r9DAKHja9WigSv4n32NSehU2Vkpj2
+          rfiWZQ5fN8Pxw0Hbxn3nOeQCOxAHXoZDH8c+ii7mc9MWQ16+AMI9FwO5yuu3safd
+          P566/MFB+wyrvHVoNm1Qs48=
+          -----END PRIVATE KEY-----
+    clients:
+      - client_id: semaphore
+        client_name: Semaphore
+        client_secret: '$argon2id$v=19$m=65536,t=3,p=4$D8h5+melpLwD5Pg2aFpL7A$8XWaH7NxOU2WjRhKYP5WW/PXs7q/ESZG8hlKA2MYtSY'
+        claims_policy: semaphore_claims_policy
+        public: false
+        authorization_policy: one_factor
+        redirect_uris:
+          - http://localhost:3000/api/auth/oidc/authelia/redirect
+        scopes:
+          - openid
+          - profile
+          - email
+        userinfo_signed_response_alg: none

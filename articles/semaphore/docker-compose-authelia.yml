@@ -1,0 +1,93 @@
+services:
+  postgres:
+    container_name: semaphore-postgres
+    restart: unless-stopped
+    image: postgres:latest
+    hostname: postgres
+    volumes:
+      - semaphore-postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: semaphore
+      POSTGRES_PASSWORD: semaphore
+      POSTGRES_DB: semaphore
+
+  semaphore:
+    container_name: semaphore
+    restart: unless-stopped
+    build: ./semaphore
+    ports:
+      - 3000:3000
+    environment:
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: semaphore
+      SEMAPHORE_DB_HOST: postgres
+      SEMAPHORE_DB_PORT: 5432
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN_PASSWORD: semaphore
+      SEMAPHORE_ADMIN_NAME: semaphore
+      SEMAPHORE_ADMIN_EMAIL: semaphore@localhost
+      SEMAPHORE_ADMIN: semaphore
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+      # LDAP settings
+      SEMAPHORE_LDAP_ENABLE: 'yes'
+      SEMAPHORE_LDAP_SERVER: 'lldap:3890'
+      SEMAPHORE_LDAP_NEEDTLS: 'no'
+      SEMAPHORE_LDAP_BIND_DN: 'uid=admin,ou=people,dc=ldap,dc=centre,dc=com'
+      SEMAPHORE_LDAP_BIND_PASSWORD: 'password'
+      SEMAPHORE_LDAP_SEARCH_DN: 'ou=people,dc=ldap,dc=centre,dc=com'
+      SEMAPHORE_LDAP_SEARCH_FILTER: '(&(objectClass=person)(uid=%s))'
+      SEMAPHORE_LDAP_MAPPING_DN: 'dn'
+      SEMAPHORE_LDAP_MAPPING_MAIL: 'mail'
+      SEMAPHORE_LDAP_MAPPING_UID: 'uid'
+      SEMAPHORE_LDAP_MAPPING_CN: 'displayName'
+      # OIDC settings
+      SEMAPHORE_OIDC_PROVIDERS: |
+        {
+          "authelia": {
+            "display_name": "Authelia",
+            "provider_url": "https://authelia.centre.com:9091",
+            "client_id": "semaphore",
+            "client_secret": "semaphore",
+            "redirect_url": "http://localhost:3000/api/auth/oidc/authelia/redirect",
+            "scopes": ["openid", "profile", "email"]
+          }
+        }
+      SEMAPHORE_WEB_ROOT: http://localhost:3000
+      TZ: Asia/Tokyo
+    depends_on:
+      - postgres
+      - lldap
+
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    restart: always
+    volumes:
+      - ./authelia:/config
+      - ./certs:/certs
+    ports:
+      - 9091:9091
+    environment:
+      - TZ=Asia/Tokyo
+    depends_on:
+      - lldap
+
+  lldap:
+    image: lldap/lldap:stable
+    container_name: lldap
+    restart: always
+    ports:
+      - "3890:3890"
+      - "6360:6360"
+      - "17170:17170"
+    environment:
+      - LLDAP_VERBOSE=true
+      - LLDAP_JWT_SECRET=REPLACE_WITH_RANDOM
+      - LLDAP_KEY_SEED=REPLACE_WITH_RANDOM
+      - LLDAP_LDAP_BASE_DN=dc=ldap,dc=centre,dc=com
+
+volumes:
+  semaphore-postgres:
+    name: semaphore-postgres
